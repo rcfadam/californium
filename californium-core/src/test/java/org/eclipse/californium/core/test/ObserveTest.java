@@ -223,6 +223,32 @@ public class ObserveTest {
 	}
 
 	@Test
+	public void testObserveClientNoReregister() throws Exception {
+		resourceX.setObserveType(Type.NON);
+
+		CoapClient client = new CoapClient(uriX);
+		CountingHandler handler = new CountingHandler();
+		CoapObserveRelation rel = client.observeAndWait(handler);
+
+		assertTrue(handler.waitForLoadCalls(1, 1000, TimeUnit.MILLISECONDS));
+
+		assertFalse("Response not received", rel.isCanceled());
+		assertNotNull("Response not received", rel.getCurrent());
+		assertEquals("\"resX says hi for the 1 time\"", rel.getCurrent().getResponseText());
+		
+		for (int count = 2; count < 10; ++count) {
+			resourceX.changed("client");
+			// assert notify received
+			assertTrue(handler.waitForLoadCalls(count, 1000, TimeUnit.MILLISECONDS));
+			assertFalse(rel.isCanceled());
+			assertEquals("\"resX says client for the " + count + " time\"", rel.getCurrent().getResponseText());
+			Thread.sleep(2000);
+		}
+		assertFalse(handler.waitForLoadCalls(10, 1000, TimeUnit.MILLISECONDS));
+		assertTrue(handler.waitForLoadCalls(10, 15, TimeUnit.SECONDS));
+	}
+
+	@Test
 	public void testObserveClientReregister() throws Exception {
 		resourceX.setObserveType(Type.NON);
 
@@ -531,6 +557,7 @@ public class ObserveTest {
 				exchange.reject();
 			} else {
 				Response response = new Response(ResponseCode.CONTENT);
+				response.getOptions().setMaxAge(10);
 				response.setPayload(currentResponse);
 				response.setType(type);
 				exchange.respond(response);

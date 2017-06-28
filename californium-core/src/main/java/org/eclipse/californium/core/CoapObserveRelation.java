@@ -283,6 +283,7 @@ public class CoapObserveRelation {
 					reregister();
 				}
 			}, timeout, TimeUnit.MILLISECONDS);
+			LOGGER.log(Level.INFO, "observe relation {0} reregister timeout {1}", new Object[] {request, timeout});
 			setReregistrationHandle(f);
 		}
 	}
