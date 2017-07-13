@@ -346,7 +346,14 @@ public class DTLSConnector implements Connector {
 		}
 		socket = new DatagramSocket(null);
 		// make it easier to stop/start a server consecutively without delays
-		socket.setReuseAddress(true);
+		if (config.isAddressReuseEnabled()) {
+			LOGGER.config("Enable address reuse for socket!");
+			socket.setReuseAddress(true);
+			if (!socket.getReuseAddress()) {
+				LOGGER.warning("Enable address reuse for socket failed!");
+			}
+		}
+		
 		socket.bind(bindAddress);
 		if (lastBindAddress != null && (!socket.getLocalAddress().equals(lastBindAddress.getAddress()) || socket.getLocalPort() != lastBindAddress.getPort())){
 			if (connectionStore instanceof ResumptionSupportingConnectionStore) {
