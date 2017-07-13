@@ -41,6 +41,8 @@ import org.eclipse.californium.scandium.ScandiumLogger;
 import org.eclipse.californium.scandium.config.DtlsConnectorConfig;
 import org.eclipse.californium.scandium.dtls.pskstore.StaticPskStore;
 
+import eu.javaspecialists.tjsn.concurrency.stripedexecutor.StripedExecutorService;
+
 public class ExampleDTLSClient {
 
     static {
@@ -83,7 +85,9 @@ public class ExampleDTLSClient {
             builder.setIdentity((PrivateKey) keyStore.getKey("client", KEY_STORE_PASSWORD.toCharArray()),
                     keyStore.getCertificateChain("client"), true);
             builder.setTrustStore(trustedCertificates);
+            builder.setEnableAddressReuse(false);
             dtlsConnector = new DTLSConnector(builder.build());
+            dtlsConnector.setExecutor(new StripedExecutorService(2));
             dtlsConnector.setRawDataReceiver(new RawDataChannel() {
 
                 @Override
