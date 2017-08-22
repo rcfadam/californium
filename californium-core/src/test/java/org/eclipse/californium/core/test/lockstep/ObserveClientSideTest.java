@@ -54,18 +54,22 @@ import org.eclipse.californium.core.network.MessageExchangeStore;
 import org.eclipse.californium.core.network.config.NetworkConfig;
 import org.eclipse.californium.core.network.interceptors.MessageTracer;
 import org.eclipse.californium.rule.CoapNetworkRule;
+import org.eclipse.californium.elements.runner.RepeatingTestRunner;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
 
 /**
  * This test implements all examples from the blockwise draft 14 for a client.
  */
+@RunWith(RepeatingTestRunner.class)
 @Category(Large.class)
 public class ObserveClientSideTest {
 	private static final int TEST_EXCHANGE_LIFETIME = 247; // milliseconds
@@ -183,6 +187,7 @@ public class ObserveClientSideTest {
 	 * 
 	 * @throws Exception if the test fails.
 	 */
+	@Ignore
 	@Test
 	public void testBlockwiseObserve() throws Exception {
 
@@ -369,6 +374,7 @@ public class ObserveClientSideTest {
 	 * 
 	 * @throws Exception
 	 */
+	@Ignore
 	@Test
 	public void testBlockwiseObserveAndNotificationWithoutBlockwise() throws Exception {
 		System.out.println("Blockwise Observe:");
@@ -461,6 +467,7 @@ public class ObserveClientSideTest {
 	 * 
 	 * @throws Exception
 	 */
+	@Ignore
 	@Test
 	public void testBlockwiseNotifyAndGet() throws Exception {
 		System.out.println("Blockwise Observe:");
@@ -565,6 +572,7 @@ public class ObserveClientSideTest {
 	 * <-----   ACK [MID=5441, T=d5d3f4286a4a6c3e], 2.05, 2:1/0/16
 	 * <pre>
 	 */
+	@Ignore
 	@Test
 	public void testBlockwiseObserverInterruptedByNewBlockwiseNotification() throws Exception {
 		String path = "test";
@@ -654,6 +662,7 @@ public class ObserveClientSideTest {
 	 * 
 	 * @throws Exception
 	 */
+	@Ignore
 	@Test
 	public void testBlockwiseGetInterruptedByBlockwiseNotification() throws Exception {
 		String path = "test";
