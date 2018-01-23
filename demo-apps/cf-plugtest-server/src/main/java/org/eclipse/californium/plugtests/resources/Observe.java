@@ -12,8 +12,18 @@
  * 
  * Contributors:
  *    Matthias Kovatsch - creator and main architect
+ *    Achim Kraus (Bosch Software Innovations GmbH) - add handler to react
+ *                                                    on notify acknowledge
  ******************************************************************************/
 package org.eclipse.californium.plugtests.resources;
+
+import static org.eclipse.californium.core.coap.CoAP.ResponseCode.BAD_REQUEST;
+import static org.eclipse.californium.core.coap.CoAP.ResponseCode.CHANGED;
+import static org.eclipse.californium.core.coap.CoAP.ResponseCode.CONTENT;
+import static org.eclipse.californium.core.coap.CoAP.ResponseCode.DELETED;
+import static org.eclipse.californium.core.coap.CoAP.ResponseCode.NOT_ACCEPTABLE;
+import static org.eclipse.californium.core.coap.CoAP.ResponseCode.NOT_FOUND;
+import static org.eclipse.californium.core.coap.MediaTypeRegistry.TEXT_PLAIN;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -23,16 +33,19 @@ import java.util.TimerTask;
 
 import org.eclipse.californium.core.CoapResource;
 import org.eclipse.californium.core.coap.CoAP.Type;
+import org.eclipse.californium.core.coap.MessageObserverAdapter;
+import org.eclipse.californium.core.coap.Response;
 import org.eclipse.californium.core.server.resources.CoapExchange;
-
-import static org.eclipse.californium.core.coap.CoAP.ResponseCode.*;
-import static org.eclipse.californium.core.coap.MediaTypeRegistry.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This resource implements a test of specification for the
  * ETSI IoT CoAP Plugtests, London, UK, 7--9 Mar 2014.
  */
 public class Observe extends CoapResource {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(Observe.class.getName());
 
 	// Members ////////////////////////////////////////////////////////////////
 
@@ -87,17 +100,31 @@ public class Observe extends CoapResource {
 
 	@Override
 	public void handleGET(CoapExchange exchange) {
-		
+
 		exchange.setMaxAge(5);
-		
+		Response response = new Response(CONTENT);
+		response.getOptions().setContentFormat(dataCf);
 		if (wasUpdated) {
-			exchange.respond(CONTENT, data, dataCf);
+			response.setPayload(data);
 			wasUpdated = false;
 		} else {
-			exchange.respond(CONTENT, time, dataCf);
+			response.setPayload(time);
 		}
+		response.addMessageObserver(new MessageObserverAdapter() {
+
+			@Override
+			public void onReject() {
+				LOGGER.info("Notify rejected!");
+			}
+
+			@Override
+			public void onAcknowledgement() {
+				LOGGER.info("Notify acknowledged!");
+			}
+		});
+		exchange.respond(response);
 	}
-	
+
 	@Override
 	public void handlePUT(CoapExchange exchange) {
 
@@ -105,7 +132,7 @@ public class Observe extends CoapResource {
 			exchange.respond(BAD_REQUEST, "Content-Format not set");
 			return;
 		}
-		
+
 		// store payload
 		storeData(exchange.getRequestPayload(), exchange.getRequestOptions().getContentFormat());
 
@@ -116,15 +143,14 @@ public class Observe extends CoapResource {
 	@Override
 	public void handleDELETE(CoapExchange exchange) {
 		wasUpdated = false;
-		
+
 		clearAndNotifyObserveRelations(NOT_FOUND);
-		
+
 		exchange.respond(DELETED);
 	}
-	
 
 	// Internal ////////////////////////////////////////////////////////////////
-	
+
 	/*
 	 * Convenience function to store data contained in a 
 	 * PUT/POST-Request. Notifies observing endpoints about
@@ -133,18 +159,18 @@ public class Observe extends CoapResource {
 	private synchronized void storeData(byte[] payload, int format) {
 
 		wasUpdated = true;
-		
+
 		if (format != dataCf) {
 			clearAndNotifyObserveRelations(NOT_ACCEPTABLE);
 		}
-		
+
 		// set payload and content type
 		data = payload;
 		dataCf = format;
 
 		getAttributes().clearContentType();
 		getAttributes().addContentType(dataCf);
-		
+
 		// signal that resource state changed
 		changed();
 	}
