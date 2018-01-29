@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.eclipse.californium.scandium.config.DtlsConnectorConfig;
 import org.eclipse.californium.scandium.dtls.AlertMessage.AlertDescription;
 import org.eclipse.californium.scandium.dtls.AlertMessage.AlertLevel;
+import org.eclipse.californium.scandium.dtls.credentialsstore.CredentialsConfiguration;
 
 
 /**
@@ -81,8 +82,8 @@ public class ResumingClientHandshaker extends ClientHandshaker {
 	 *            if session, recordLayer or config is <code>null</code>
 	 */
 	public ResumingClientHandshaker(DTLSSession session, RecordLayer recordLayer, SessionListener sessionListener,
-			DtlsConnectorConfig config, int maxTransmissionUnit) {
-		super(session, recordLayer, sessionListener, config, maxTransmissionUnit);
+			DtlsConnectorConfig config, CredentialsConfiguration credConfig, int maxTransmissionUnit) {
+		super(session, recordLayer, sessionListener, config, credConfig, maxTransmissionUnit);
 		if (session.getSessionIdentifier() == null) {
 			throw new IllegalArgumentException("Session must contain the ID of the session to resume");
 		}

@@ -20,7 +20,7 @@ import java.net.InetSocketAddress;
 /**
  * Relate credentials with inet address.
  */
-public interface ClientCredentialsStore {
+public interface CredentialsStore {
 
 	CredentialsConfiguration getCredentialsConfiguration(InetSocketAddress inetAddress);
 }

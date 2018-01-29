@@ -20,6 +20,7 @@ import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 
 import org.eclipse.californium.scandium.dtls.cipher.CipherSuite;
+import org.eclipse.californium.scandium.dtls.pskstore.PskStore;
 import org.eclipse.californium.scandium.dtls.rpkstore.TrustedRpkStore;
 
 /**
@@ -35,30 +36,11 @@ public interface CredentialsConfiguration {
 	CipherSuite[] getSupportedCipherSuites();
 
 	/**
-	 * Gets the Identity to use for a PSK based handshake with a given peer.
-	 * <p>
-	 * A DTLS client uses this method to determine the identity to include in
-	 * its <em>CLIENT_KEY_EXCHANGE</em> message during a PSK based DTLS
-	 * handshake with the peer.
+	 * Gets Store containing PSK credentials.
 	 * 
-	 * @param inetAddress The IP address of the peer to perform the handshake
-	 *            with.
-	 * @return The identity to use or <code>null</code> if no peer with the
-	 *         given address is registered.
-	 * @throws NullPointerException if address is {@code null}.
+	 * @return the store 
 	 */
-	String getIdentity();
-
-	/**
-	 * Gets the shared key for a given identity.
-	 * <p>
-	 * The key is used for mutual authentication during a DTLS handshake.
-	 * 
-	 * @param identity The identity to look up the key for.
-	 * @return The key or <code>null</code> if the given identity is unknown.
-	 * @throws NullPointerException if identity is {@code null}.
-	 */
-	byte[] getKey();
+	PskStore getPskStore();
 
 	/**
 	 * Gets the private key to use for proving identity to a peer

@@ -31,6 +31,7 @@ import java.security.GeneralSecurityException;
 import org.eclipse.californium.scandium.category.Small;
 import org.eclipse.californium.scandium.config.DtlsConnectorConfig;
 import org.eclipse.californium.scandium.dtls.CertificateTypeExtension.CertificateType;
+import org.eclipse.californium.scandium.dtls.credentialsstore.CredentialsConfiguration;
 import org.eclipse.californium.scandium.util.ServerName;
 import org.eclipse.californium.scandium.util.ServerName.NameType;
 import org.eclipse.californium.scandium.util.ServerNames;
@@ -153,12 +154,15 @@ public class ClientHandshakerTest {
 		if (configureTrustStore) {
 			builder.setTrustStore(DtlsTestTools.getTrustedCertificates());
 		}
-
+		DtlsConnectorConfig config = builder.build();
+		CredentialsConfiguration credConfig = config.getCredentialsStore().getCredentialsConfiguration(peer);
+		
 		handshaker = new ClientHandshaker(
 				new DTLSSession(peer, true),
 				recordLayer,
 				null,
-				builder.build(),
+				config,
+				credConfig,
 				MAX_TRANSMISSION_UNIT);
 	}
 

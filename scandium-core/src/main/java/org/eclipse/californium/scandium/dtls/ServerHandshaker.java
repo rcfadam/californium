@@ -61,7 +61,9 @@ import org.eclipse.californium.scandium.dtls.cipher.CipherSuite;
 import org.eclipse.californium.scandium.dtls.cipher.CipherSuite.KeyExchangeAlgorithm;
 import org.eclipse.californium.scandium.dtls.cipher.ECDHECryptography;
 import org.eclipse.californium.scandium.dtls.cipher.ECDHECryptography.SupportedGroup;
+import org.eclipse.californium.scandium.dtls.credentialsstore.CredentialsConfiguration;
 import org.eclipse.californium.scandium.dtls.pskstore.PskStore;
+import org.eclipse.californium.scandium.dtls.pskstore.StaticPskStore;
 import org.eclipse.californium.scandium.util.ByteArrayUtils;
 import org.eclipse.californium.scandium.util.ServerNames;
 
@@ -151,8 +153,8 @@ public class ServerHandshaker extends Handshaker {
 	 *            if session or recordLayer is <code>null</code>.
 	 */
 	public ServerHandshaker(DTLSSession session, RecordLayer recordLayer, SessionListener sessionListener,
-			DtlsConnectorConfig config, int maxTransmissionUnit) throws HandshakeException {
-		this(0, session, recordLayer, sessionListener, config, maxTransmissionUnit);
+			DtlsConnectorConfig config, CredentialsConfiguration credConfig, int maxTransmissionUnit) throws HandshakeException {
+		this(0, session, recordLayer, sessionListener, config, credConfig, maxTransmissionUnit);
 	}
 	
 	/**
@@ -183,24 +185,24 @@ public class ServerHandshaker extends Handshaker {
 	 *            if session, recordLayer or config is <code>null</code>.
 	 */
 	public ServerHandshaker(int initialMessageSequenceNo, DTLSSession session, RecordLayer recordLayer, SessionListener sessionListener,
-			DtlsConnectorConfig config, int maxTransmissionUnit) { 
-		super(false, initialMessageSequenceNo, session, recordLayer, sessionListener, config.getTrustStore(), maxTransmissionUnit,
-		        config.getRpkTrustStore());
+			DtlsConnectorConfig config, CredentialsConfiguration credConfig, int maxTransmissionUnit) { 
+		super(false, initialMessageSequenceNo, session, recordLayer, sessionListener, credConfig.getTrusts(), maxTransmissionUnit, credConfig.getRpkTrustStore());
 
-		this.supportedCipherSuites = Arrays.asList(config.getSupportedCipherSuites());
+		this.supportedCipherSuites = Arrays.asList(credConfig.getSupportedCipherSuites());
 
-		this.pskStore = config.getPskStore();
+		this.pskStore = credConfig.getPskStore();
 
-		this.privateKey = config.getPrivateKey();
-		this.certificateChain = config.getCertificateChain();
-		this.publicKey = config.getPublicKey();
+		this.privateKey = credConfig.getPrivateKey();
+		this.certificateChain = credConfig.getCertificateChain();
+		this.publicKey = credConfig.getPublicKey();
 
+		// TODO should we move this in Credentials config ?
 		this.clientAuthenticationRequired = config.isClientAuthenticationRequired();
 
 		this.supportedClientCertificateTypes = new ArrayList<>();
 		this.supportedClientCertificateTypes.add(CertificateType.RAW_PUBLIC_KEY);
 		if (rootCertificates != null && rootCertificates.length > 0) {
-			int index = config.isSendRawKey() ? 1 : 0;
+			int index = credConfig.isSendRawKey() ? 1 : 0;
 			this.supportedClientCertificateTypes.add(index, CertificateType.X_509);
 		}
 
@@ -208,7 +210,7 @@ public class ServerHandshaker extends Handshaker {
 		if (privateKey != null && publicKey != null) {
 			if (certificateChain == null || certificateChain.length == 0) {
 				this.supportedServerCertificateTypes.add(CertificateType.RAW_PUBLIC_KEY);
-			} else if (config.isSendRawKey()) {
+			} else if (credConfig.isSendRawKey()) {
 				this.supportedServerCertificateTypes.add(CertificateType.RAW_PUBLIC_KEY);
 				this.supportedServerCertificateTypes.add(CertificateType.X_509);
 			} else {
