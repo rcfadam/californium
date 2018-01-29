@@ -667,6 +667,17 @@ public final class DtlsConnectorConfig {
 		}
 
 		/**
+		 * Sets credentials Store use to be able to have different credentials depending on foreign peers
+		 * @param credStore
+		 *            the credentials store
+		 * @return this builder for command chaining
+		 */
+		public Builder setCredentialsStore(CredentialsStore credStore) {
+			config.credentialsStore = credStore;
+			return this;
+		}
+
+		/**
 		 * Sets the resolver to use for determining the server names to include
 		 * in a <em>Server Name Indication</em> extension when initiating a handshake
 		 * with a peer.
@@ -908,9 +919,6 @@ public final class DtlsConnectorConfig {
 			if (config.enableReuseAddress == null) {
 				config.enableReuseAddress = false;
 			}
-			if (config.trustStore == null) {
-				config.trustStore = new X509Certificate[0];
-			}
 			if (config.earlyStopRetransmission == null) {
 				config.earlyStopRetransmission = true;
 			}
@@ -923,9 +931,6 @@ public final class DtlsConnectorConfig {
 			if (config.clientAuthenticationRequired == null) {
 				config.clientAuthenticationRequired = true;
 			}
-			if (config.sendRawKey == null) {
-				config.sendRawKey = true;
-			}
 			if (config.outboundMessageBufferSize == null) {
 				config.outboundMessageBufferSize = 100000;
 			}
@@ -935,37 +940,48 @@ public final class DtlsConnectorConfig {
 			if (config.staleConnectionThreshold == null) {
 				config.staleConnectionThreshold = DEFAULT_STALE_CONNECTION_TRESHOLD;
 			}
-			if (config.supportedCipherSuites == null || config.supportedCipherSuites.length == 0) {
-				determineCipherSuitesFromConfig();
-			}
-			if (config.trustedRPKs == null) {
-				// must be set after determineCipherSuitesFromConfig(),
-				// otherwise this would be interpreted for client only
-				// as ECDHE_ECDSA support!
-				config.trustedRPKs = new TrustAllRpks();
-			}
 
-			// check cipher consistency
-			if (config.supportedCipherSuites == null || config.supportedCipherSuites.length == 0) {
-				throw new IllegalStateException("Supported cipher suites must be set either " +
-						"explicitly or implicitly by means of setting the identity or PSK store");
-			}
-			for (CipherSuite suite : config.supportedCipherSuites) {
-				switch (suite) {
-				case TLS_PSK_WITH_AES_128_CCM_8:
-				case TLS_PSK_WITH_AES_128_CBC_SHA256:
-					verifyPskBasedCipherConfig();
-					break;
-				case TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:
-				case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:
-					verifyEcBasedCipherConfig();
-					break;
-				default:
-					break;
+			if (config.getCredentialsStore() == null) {
+				if (config.trustStore == null) {
+					config.trustStore = new X509Certificate[0];
 				}
-			}
 
-			config.credentialsStore = new DtlsConfigCredentialsStore(config);
+				if (config.sendRawKey == null) {
+					config.sendRawKey = true;
+				}
+
+				if (config.supportedCipherSuites == null || config.supportedCipherSuites.length == 0) {
+					determineCipherSuitesFromConfig();
+				}
+				if (config.trustedRPKs == null) {
+					// must be set after determineCipherSuitesFromConfig(),
+					// otherwise this would be interpreted for client only
+					// as ECDHE_ECDSA support!
+					config.trustedRPKs = new TrustAllRpks();
+				}
+
+				// check cipher consistency
+				if (config.supportedCipherSuites == null || config.supportedCipherSuites.length == 0) {
+					throw new IllegalStateException("Supported cipher suites must be set either "
+							+ "explicitly or implicitly by means of setting the identity or PSK store");
+				}
+				for (CipherSuite suite : config.supportedCipherSuites) {
+					switch (suite) {
+					case TLS_PSK_WITH_AES_128_CCM_8:
+					case TLS_PSK_WITH_AES_128_CBC_SHA256:
+						verifyPskBasedCipherConfig();
+						break;
+					case TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8:
+					case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:
+						verifyEcBasedCipherConfig();
+						break;
+					default:
+						break;
+					}
+				}
+
+				config.credentialsStore = new DtlsConfigCredentialsStore(config);
+			}
 			return config;
 		}
 
